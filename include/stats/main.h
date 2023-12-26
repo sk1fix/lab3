@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <fstream>
+#include <vector>
 using namespace std;
 
 struct stats {
@@ -18,6 +19,13 @@ ostream& operator << (ostream& out, stats& s) {
     return out;
 }
 template <typename T>
+void swap(T& a, T& b, stats& stat) {
+    T temp = a;
+    a = b;
+    b = temp;
+    stat.copy_count += 3;
+}
+template <typename T>
 stats BubleSort(vector<T>& data) {
     stats stat;
     int size = data.size();
@@ -26,7 +34,7 @@ stats BubleSort(vector<T>& data) {
             stat.comparison_count += 1;
             if (data[j] > data[j + 1]) {
                 stat.copy_count += 1;
-                int temp = data[j];
+                T temp = data[j];
                 data[j] = data[j + 1];
                 data[j + 1] = temp;
             }
@@ -36,31 +44,49 @@ stats BubleSort(vector<T>& data) {
 }
 
 template <typename T>
-stats quickSort(vector<T>& data, int low, int high) {
+stats quickSort(vector<T>& arr) {
+    vector<pair<T, T>> stack;
+    stack.push_back(make_pair(0, arr.size() - 1));
     stats stat;
-    if (low < high) {
-        int pivot = data[high];
-        int i = low - 1;
-        for (int j = low; j <= high - 1; j++) {
-            stat.comparison_count++;
-            if (data[j] < pivot) {
-                i++;
-                swap(data[i], data[j]);
-                stat.copy_count++;
+    while (!stack.empty()) {
+        pair<int, int> curr = stack.back();
+        stack.pop_back();
+        int low = curr.first;
+        int high = curr.second;
+        while (low < high) {
+            int pivot = arr[(low + high) / 2];
+            int i = low;
+            int j = high;
+            while (i <= j) {
+                while (arr[i] < pivot) {
+                    i++;
+                    stat.comparison_count++;
+                }
+                while (arr[j] > pivot) {
+                    j--;
+                    stat.comparison_count++;
+                }
+                if (i <= j) {
+                    swap(arr[i], arr[j], stat);
+                    i++;
+                    j--;
+                }
+            }
+            if (j - low < high - i) {
+                if (low < j)
+                    stack.push_back(make_pair(low, j));
+                low = i;
+            }
+            else {
+                if (i < high)
+                    stack.push_back(make_pair(i, high));
+                high = j;
             }
         }
-        swap(data[i + 1], data[high]);
-        stat.copy_count++;
-        int pi = i + 1;
-
-        stats left_stats = quickSort(data, low, pi - 1);
-        stats right_stats = quickSort(data, pi + 1, high);
-
-        stat.comparison_count += left_stats.comparison_count + right_stats.comparison_count;
-        stat.copy_count += left_stats.copy_count + right_stats.copy_count;
     }
     return stat;
 }
+
 
 template <typename T>
 stats CombSort(vector<T>& data) {
