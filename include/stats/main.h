@@ -13,13 +13,16 @@ struct stats {
         return *this;
     }
 };
-
+ostream& operator << (ostream& out, stats& s) {
+    cout << "Comparsions: " << s.comparison_count << "  Copies: " << s.copy_count << " ";
+    return out;
+}
 template <typename T>
 stats BubleSort(vector<T>& data) {
     stats stat;
     int size = data.size();
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
+    for (int i = 0; i < size-1; i++) {
+        for (int j = 0; j < size-1-i; j++) {
             stat.comparison_count += 1;
             if (data[j] > data[j + 1]) {
                 stat.copy_count += 1;
@@ -29,6 +32,7 @@ stats BubleSort(vector<T>& data) {
             }
         }
     }
+    return stat;
 }
 
 template <typename T>
@@ -45,7 +49,7 @@ stats quickSort(vector<T>& data, int low, int high) {
                 stat.copy_count++;
             }
         }
-        std::swap(data[i + 1], data[high]);
+        swap(data[i + 1], data[high]);
         stat.copy_count++;
         int pi = i + 1;
 
@@ -55,42 +59,40 @@ stats quickSort(vector<T>& data, int low, int high) {
         stat.comparison_count += left_stats.comparison_count + right_stats.comparison_count;
         stat.copy_count += left_stats.copy_count + right_stats.copy_count;
     }
-    return s;
+    return stat;
 }
+
 template <typename T>
 stats CombSort(vector<T>& data) {
     stats stat;
+    double factor = 1.2473309;
+    int step = data.size() - 1;
     int size = data.size();
-    int gap = size;
-    float shrink = 1.3;
-    bool sorted = false;
-
-    while (!sorted) {
-        gap = (gap / shrink) > 1 ? (gap / shrink) : 1;
-        if (gap == 1)
-            sorted = true;
-
-        for (int i = 0; i + gap < size; ++i) {
+    while (step >= 1)
+    {
+        for (int i = 0; i + step < size; i++)
+        {
             stat.comparison_count += 1;
-            if (data[i] > data[i + gap]) {
+            if (data[i] > data[i + step])
+            {
                 stat.copy_count += 1;
-                int temp = data[i];
-                data[i] = data[i + gap];
-                data[i + gap] = temp;
-                sorted = false;
+                T temp = data[i];
+                data[i] = data[i + step];
+                data[i + step] = temp;
             }
         }
+        step /= factor;
     }
     return stat;
 }
 
 template<typename T>
-std::vector<T> random(T a, T b, int n, size_t i) {
-    std::vector<int> res;
-    std::mt19937 gen(i);
-    std::uniform_int_distribution<> distribution(a, b);
+vector<T> random(T a, T b, int n, size_t i) {
+    vector<int> res;
+    mt19937 gen(i);
+    uniform_int_distribution<> distribution(a, b);
     for (size_t i = 0; i < n; i++) {
-        size_t x = distribution(generator);
+        size_t x = distribution(gen);
         res.push_back(x);
     }
     return res;
